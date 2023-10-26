@@ -42,6 +42,7 @@ class RegressionTrainer:
                  criterion=None,
                  optimizer=None,
                  scheduler=None,
+                 no_targets=False,
                  device=torch.device("cpu")):
         """
 
@@ -73,14 +74,22 @@ class RegressionTrainer:
         self.best_model_loss = None
         self.train_losses = []
         self.val_losses = []
+        self.no_targets = False
 
     def train_step(self, model, dataloader, criterion, optimizer, device):
         model.train()
         epoch_loss = 0
-        for data, target in dataloader:
-            data, target = data.to(device), target.to(device)
+        for item in dataloader:
             optimizer.zero_grad()
-            loss = criterion(model, data, target)
+            if self.no_targets:
+                data = item
+                data = data.to(device)
+                loss = criterion(model, data)
+            else:
+                data, target = item
+                data, target = data.to(device), target.to(device)
+                loss = criterion(model, data, target)
+
             loss.backward()
             optimizer.step()
 
@@ -92,9 +101,16 @@ class RegressionTrainer:
         model.eval()
         with torch.no_grad():
             epoch_loss = 0
-            for data, target in dataloader:
-                data, target = data.to(device), target.to(device)
-                loss = criterion(model, data, target)
+            for item in dataloader:
+
+                if self.no_targets:
+                    data = item
+                    data = data.to(device)
+                    loss = criterion(model, data)
+                else:
+                    data, target = item
+                    data, target = data.to(device), target.to(device)
+                    loss = criterion(model, data, target)
 
                 epoch_loss += loss.item()
             return epoch_loss / len(dataloader)
@@ -160,7 +176,7 @@ class RegressionTrainer:
 
         return train_losses, val_losses
 
-    def loss_plot(self, logx=False, logy=False):
+    def loss_plot(self, logx=False, logy=False, save_path=None):
         plt.figure(figsize=(12, 8))
         plt.plot(self.train_losses, label='Train Loss')
         plt.plot(self.val_losses, label='Validation Loss')
@@ -173,7 +189,11 @@ class RegressionTrainer:
             plt.semilogy()
 
         plt.legend()
-        plt.show()
+
+        if save_path is None:
+            plt.show()
+        else:
+            plt.savefig(save_path)
 
     def get_best_model(self):
         self.model.load_state_dict(self.best_model_params)
