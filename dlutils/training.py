@@ -82,7 +82,7 @@ class RegressionTrainer:
         for item in dataloader:
             optimizer.zero_grad()
             if self.no_targets:
-                data = item
+                (data,) = item
                 data = data.to(device)
                 loss = criterion(model, data)
             else:
@@ -104,7 +104,7 @@ class RegressionTrainer:
             for item in dataloader:
 
                 if self.no_targets:
-                    data = item
+                    (data,) = item
                     data = data.to(device)
                     loss = criterion(model, data)
                 else:
