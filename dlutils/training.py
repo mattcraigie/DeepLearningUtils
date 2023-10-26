@@ -74,7 +74,7 @@ class RegressionTrainer:
         self.best_model_loss = None
         self.train_losses = []
         self.val_losses = []
-        self.no_targets = False
+        self.no_targets = no_targets
 
     def train_step(self, model, dataloader, criterion, optimizer, device):
         model.train()
