@@ -57,7 +57,7 @@ class RegressionTrainer:
 
         if criterion is None:
             print("No criterion provided, using MSE")
-            criterion = mse_criterion
+            criterion = mse_criterion()
 
         if optimizer is None:
             print("No optimizer provided, using Adam")
@@ -139,6 +139,7 @@ class RegressionTrainer:
             if val_loss < best_loss:
                 self.best_model_params = copy.deepcopy(model.state_dict())
                 self.best_model_loss = val_loss
+                best_loss = val_loss
 
             if print_progress and epoch % print_every == 0:
                 print(f"Epoch {epoch + 1} \t| Train Loss: {train_loss:.3e} \t| Val Loss: {val_loss:.3e}")
