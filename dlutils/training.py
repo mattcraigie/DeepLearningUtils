@@ -15,18 +15,24 @@ def mse_criterion():
     return general_criterion(nn.MSELoss())
 
 
-def batch_apply(model, dataloader, device, return_targets=True):
+def batch_apply(model, dataloader, device, use_targets=True, return_targets=True):
 
     model.eval()
     with torch.no_grad():
 
         outputs = []
         targets = []
-        for data, target in dataloader:
+        for item in dataloader:
+
+            if use_targets:
+                data, target = item
+                targets.append(target)
+            else:
+                data = item
+
             data = data.to(device)
             output = model(data)
             outputs.append(output)
-            targets.append(target)
 
         if return_targets:
             return torch.cat(outputs, dim=0), torch.cat(targets, dim=0)
@@ -195,6 +201,9 @@ class RegressionTrainer:
             plt.show()
         else:
             plt.savefig(save_path)
+
+    def save_losses(self, save_path):
+        np.save(save_path, np.array([self.train_losses, self.val_losses]))
 
     def get_best_model(self):
         self.model.load_state_dict(self.best_model_params)

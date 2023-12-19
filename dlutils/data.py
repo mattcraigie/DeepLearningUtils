@@ -76,3 +76,17 @@ class DataHandler:
         elif style == 'scatter':
             plt.scatter(self.data[:, index_data], self.targets[:, index_target])
             plt.show()
+
+    def make_single_dataloader(self, batch_size, shuffle=True, dataset_class=None):
+
+        if dataset_class is None:
+            dataset_class = TensorDataset
+
+        if self.use_targets:
+            dataset = dataset_class(self.data, self.targets)
+        else:
+            dataset = dataset_class(self.data)
+
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
+
+        return dataloader
