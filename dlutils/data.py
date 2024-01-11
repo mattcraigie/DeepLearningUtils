@@ -17,12 +17,13 @@ class DataHandler:
 
         self.use_targets = True if targets is not None else False
 
-    def make_dataloaders(self, batch_size, val_fraction=0.2, shuffle=True, dataset_class=None):
+    def make_dataloaders(self, batch_size, val_fraction=0.2, shuffle_split=True, shuffle_dataloaders=True, dataset_class=None):
         """
         Makes dataloaders for the simulated data
         :param batch_size: the batch size for the dataloaders
         :param val_fraction: the fraction of the data to use for validation
-        :param shuffle: whether or not to shuffle the data
+        :param shuffle_split: whether to shuffle the data before splitting into train and val
+        :param shuffle_dataloaders: whether to shuffle the dataloaders
         :param dataset_class: the class to use for the dataset. Defaults to TensorDataset
         :return:
         """
@@ -34,7 +35,7 @@ class DataHandler:
         num_data = self.data.shape[0]
         train_fraction = 1 - val_fraction
         num_train = int(num_data * train_fraction)
-        shuffle_idx = torch.randperm(num_data) if shuffle else torch.arange(num_data)
+        shuffle_idx = torch.randperm(num_data) if shuffle_split else torch.arange(num_data)
         train_idx = shuffle_idx[:num_train]
         val_idx = shuffle_idx[num_train:]
 
@@ -51,8 +52,8 @@ class DataHandler:
             val_dataset = dataset_class(val_data)
 
         # create dataloaders
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
-        val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=shuffle)
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle_dataloaders)
+        val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=shuffle_dataloaders)
 
         return train_loader, val_loader
 
