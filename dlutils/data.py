@@ -1,8 +1,34 @@
 import torch
 from torch.utils.data import DataLoader, Dataset, TensorDataset
+from torchvision import transforms
 import matplotlib.pyplot as plt
 
 # Datasets
+
+
+class RotatedDataset(Dataset):
+    def __init__(self, data, targets=None):
+        """
+        Custom dataset that applies a transformation to the data.
+        :param data: input data
+        :param targets: target outputs
+        :param transform: a torchvision.transforms transformation or composed transformations
+        """
+        self.data = data
+        self.targets = targets
+        self.rotation_transform = transforms.RandomRotation([0, 90, 180, 270], expand=False)
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        x = self.data[idx]
+        x = self.rotation_transform(x)
+
+        if self.targets is not None:
+            y = self.targets[idx]
+            return x, y
+        return x
 
 
 class DataHandler:
