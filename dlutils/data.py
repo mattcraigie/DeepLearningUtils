@@ -33,7 +33,7 @@ class RotatedDataset(Dataset):
         if self.targets is not None:
             y = self.targets[idx]
             return x, y
-        return x
+        return x,
 
 
 class DataHandler:
