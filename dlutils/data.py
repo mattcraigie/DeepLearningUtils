@@ -2,21 +2,27 @@ import torch
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 from torchvision import transforms
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Datasets
+
+
+# Define a custom transformation function for random 90 degree rotations
+def random_rot90(x):
+    k = np.random.randint(0, 4)  # Randomly choose among 0, 1, 2, or 3 times 90 degree rotation
+    return torch.rot90(x, k, [-1, -2])  # Assuming x is a C x H x W tensor
 
 
 class RotatedDataset(Dataset):
     def __init__(self, data, targets=None):
         """
-        Custom dataset that applies a transformation to the data.
-        :param data: input data
+        Custom dataset that applies a 90-degree rotation transformation to the data.
+        :param data: input data as a list or array of images
         :param targets: target outputs
-        :param transform: a torchvision.transforms transformation or composed transformations
         """
         self.data = data
         self.targets = targets
-        self.rotation_transform = transforms.RandomRotation([0, 90, 180, 270], expand=False)
+        self.rotation_transform = transforms.Lambda(random_rot90)
 
     def __len__(self):
         return len(self.data)
@@ -24,7 +30,6 @@ class RotatedDataset(Dataset):
     def __getitem__(self, idx):
         x = self.data[idx]
         x = self.rotation_transform(x)
-
         if self.targets is not None:
             y = self.targets[idx]
             return x, y
