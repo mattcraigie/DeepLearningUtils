@@ -210,34 +210,52 @@ class RegressionTrainer:
         return self.model, self.best_model_loss
 
     def show_model_performance(self, load_best=False):
-
         if load_best:
             self.model.load_state_dict(self.best_model_params)
 
+        # Run model on train and validation sets
         train_results, train_targets = batch_apply(self.model, self.train_dataloader, self.device)
         val_results, val_targets = batch_apply(self.model, self.val_dataloader, self.device)
 
-        train_results, train_targets = train_results.cpu().numpy(), train_targets.cpu().numpy()
-        val_results, val_targets = val_results.cpu().numpy(), val_targets.cpu().numpy()
+        # Move to CPU and convert to numpy
+        train_results = train_results.cpu().numpy()
+        train_targets = train_targets.cpu().numpy()
+        val_results = val_results.cpu().numpy()
+        val_targets = val_targets.cpu().numpy()
 
-        num_targets = train_targets.shape[1]
+        import numpy as np
 
-        fig, axes = plt.subplots(ncols=num_targets, figsize=(num_targets*4, 4))
+        # Combine train and validation data for MSE calculations
+        all_preds = np.concatenate([train_results, val_results], axis=0)
+        all_targs = np.concatenate([train_targets, val_targets], axis=0)
 
+        # Compute per-target MSE
+        num_targets = all_targs.shape[1]
+        per_target_mse = [np.mean((all_preds[:, i] - all_targs[:, i]) ** 2) for i in range(num_targets)]
+
+        # Compute total MSE across all targets
+        total_mse = np.mean((all_preds - all_targs) ** 2)
+
+        # Create subplots
+        fig, axes = plt.subplots(ncols=num_targets, figsize=(num_targets * 4, 4))
         if num_targets == 1:
             axes = [axes]
 
+        # Plot predictions vs targets with per-target MSE in title
         for i in range(num_targets):
-
             axes[i].scatter(train_targets[:, i], train_results[:, i], label="Train")
             axes[i].scatter(val_targets[:, i], val_results[:, i], label="Validation")
             axes[i].set_xlabel("Target")
             axes[i].set_ylabel("Prediction")
+            axes[i].set_title(f"MSE: {per_target_mse[i]:.3f}")
             axes[i].legend()
 
-            # make a 1-1 line
+            # Add 1:1 reference line
             min_val = min(train_targets[:, i].min(), val_targets[:, i].min())
             max_val = max(train_targets[:, i].max(), val_targets[:, i].max())
             axes[i].plot([min_val, max_val], [min_val, max_val], color="black")
 
+        # Set overall title with total MSE
+        fig.suptitle(f"Total MSE: {total_mse:.3f}")
+        fig.tight_layout(rect=[0, 0.03, 1, 0.95])
         plt.show()
